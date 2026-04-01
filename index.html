@@ -105,7 +105,16 @@
         if (track.kind === 'audio') {
           const el = track.attach();
           el.volume = document.getElementById('volume').value;
+          // Fix Safari iOS — forcer la lecture après interaction utilisateur
+          el.setAttribute('playsinline', '');
+          el.setAttribute('webkit-playsinline', '');
+          el.muted = false;
           document.body.appendChild(el);
+          // Forcer play() explicitement pour iOS Safari
+          el.play().catch(() => {
+            // Si bloqué, on réessaie au prochain touch
+            document.addEventListener('touchstart', () => el.play(), { once: true });
+          });
           audioElements.push(el);
         }
       });
