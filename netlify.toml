@@ -1,0 +1,7 @@
+[build]
+  functions = "netlify/functions"
+
+[[redirects]]
+  from = "/token"
+  to = "/.netlify/functions/token"
+  status = 200

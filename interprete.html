@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VisioTranslate – Interprète</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
+  <style>
+    :root{--bleu:#002395;--rouge:#ED2939;--blanc:#fff;--vert:#16a34a;--orange:#f59e0b}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'DM Sans',sans-serif;background:#0d1117;color:#fff;min-height:100vh;display:flex;flex-direction:column}
+    header{background:#161b22;border-bottom:4px solid var(--vert);padding:16px 32px;display:flex;align-items:center;justify-content:space-between}
+    .logo{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:900}
+    .logo span:first-child{color:#6b8cff}.logo span:last-child{color:var(--rouge)}
+    .badge{background:var(--vert);color:#fff;font-size:.72rem;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;padding:5px 14px;border-radius:20px;display:flex;align-items:center;gap:6px}
+    .dot{width:8px;height:8px;border-radius:50%;background:#fff;animation:blink 1.2s infinite}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+    .avert{background:#7c2d12;padding:9px 32px;font-size:.8rem;display:flex;align-items:center;gap:8px}
+    .controles{background:#161b22;border-bottom:1px solid #30363d;padding:20px 32px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+    .statut-live{display:flex;align-items:center;gap:8px;font-size:.85rem;min-width:200px}
+    .rond{width:12px;height:12px;border-radius:50%;background:#30363d;transition:background .3s,box-shadow .3s}
+    .actif .rond{background:var(--vert);box-shadow:0 0 8px var(--vert)}
+    .mute .rond{background:var(--orange);box-shadow:0 0 8px var(--orange)}
+    .arrete .rond{background:#ef4444}
+    .label{font-weight:500;color:#c9d1d9}
+    .btn{border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.95rem;font-weight:500;padding:13px 28px;border-radius:8px;display:flex;align-items:center;gap:8px;transition:transform .12s,opacity .12s}
+    .btn:hover:not(:disabled){transform:translateY(-1px)}
+    .btn:disabled{opacity:.35;cursor:not-allowed}
+    .btn-start{background:var(--vert);color:#fff}
+    .btn-mute{background:var(--orange);color:#fff}
+    .btn-unmute{background:#2563eb;color:#fff;display:none}
+    .btn-stop{background:#ef4444;color:#fff}
+    .salle-select{background:#21262d;color:#c9d1d9;border:1px solid #30363d;padding:10px 16px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.9rem;cursor:pointer}
+    .vu-wrap{display:flex;align-items:center;gap:10px;margin-left:auto}
+    .vu-label{font-size:.78rem;color:#6e7681}
+    .vu-bar{display:flex;gap:3px;align-items:flex-end;height:28px}
+    .vu-bar span{width:5px;border-radius:2px;background:#30363d;height:6px}
+    .vu-bar.actif span{background:var(--vert);animation:vu 1.1s ease-in-out infinite}
+    .vu-bar.actif span:nth-child(1){animation-delay:0s}
+    .vu-bar.actif span:nth-child(2){animation-delay:.12s}
+    .vu-bar.actif span:nth-child(3){animation-delay:.24s}
+    .vu-bar.actif span:nth-child(4){animation-delay:.36s}
+    .vu-bar.actif span:nth-child(5){animation-delay:.24s}
+    .vu-bar.actif span:nth-child(6){animation-delay:.12s}
+    @keyframes vu{0%,100%{height:4px}50%{height:24px}}
+    .centre{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:40px}
+    .waiting-card{background:#161b22;border:1px solid #30363d;border-radius:16px;padding:48px 40px;text-align:center;max-width:480px;width:100%}
+    .waiting-card h2{font-family:'Playfair Display',serif;font-size:1.6rem;margin-bottom:10px}
+    .waiting-card p{color:#8b949e;font-size:.9rem;line-height:1.7}
+    .live-card{background:#161b22;border:2px solid var(--vert);border-radius:16px;padding:32px 40px;text-align:center;max-width:480px;width:100%;display:none}
+    .live-card h2{font-family:'Playfair Display',serif;font-size:1.4rem;margin-bottom:8px;color:var(--vert)}
+    .live-card p{color:#8b949e;font-size:.88rem;line-height:1.6}
+    .nb-auditeurs{margin-top:16px;font-size:.82rem;color:#6e7681}
+    .nb-auditeurs strong{color:#c9d1d9}
+    .checklist{background:#161b22;border:1px solid #30363d;border-radius:8px;margin:0 32px 24px;padding:16px 24px}
+    .checklist h3{font-size:.68rem;text-transform:uppercase;letter-spacing:2px;color:#6e7681;margin-bottom:10px}
+    .checklist ul{list-style:none;display:flex;flex-wrap:wrap;gap:8px 28px}
+    .checklist li{font-size:.84rem;color:#8b949e;display:flex;align-items:center;gap:6px}
+    .ok{color:var(--vert)}.att{color:var(--orange)}
+    footer{text-align:center;padding:12px;font-size:.7rem;color:#6e7681;border-top:1px solid #21262d}
+  </style>
+</head>
+<body>
+<header>
+  <div class="logo"><span>VISIO</span><span>TRANSLATE</span></div>
+  <div class="badge"><div class="dot"></div>Mode Interprète</div>
+</header>
+<div class="avert">🔒 Page confidentielle — Ne partagez pas ce lien. Réservé à l'interprète.</div>
+<div class="controles">
+  <select class="salle-select" id="salle-select">
+    <option value="francais">🇫🇷 Canal Français</option>
+    <option value="anglais">🇬🇧 Canal Anglais</option>
+    <option value="espagnol">🇪🇸 Canal Espagnol</option>
+  </select>
+  <div class="statut-live" id="statut">
+    <div class="rond"></div>
+    <span class="label" id="statut-label">En attente</span>
+  </div>
+  <button class="btn btn-start"  id="btn-start"  onclick="demarrer()">🎙 Démarrer</button>
+  <button class="btn btn-mute"   id="btn-mute"   onclick="couperMicro()" disabled>🔇 Couper mon micro</button>
+  <button class="btn btn-unmute" id="btn-unmute" onclick="rouvrirMicro()">🎙 Réactiver</button>
+  <button class="btn btn-stop"   id="btn-stop"   onclick="arreter()" disabled>⏹ Arrêter</button>
+  <div class="vu-wrap">
+    <span class="vu-label">Micro</span>
+    <div class="vu-bar" id="vu"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+  </div>
+</div>
+<div class="centre">
+  <div class="waiting-card" id="waiting-card">
+    <h2>Prêt à diffuser</h2>
+    <p>Sélectionnez le canal, vérifiez votre micro<br/>puis cliquez <strong>Démarrer</strong>.</p>
+  </div>
+  <div class="live-card" id="live-card">
+    <h2>🔴 Diffusion en cours</h2>
+    <p>Vous êtes en direct. Les auditeurs vous entendent.</p>
+    <div class="nb-auditeurs">Auditeurs connectés : <strong id="nb-auditeurs">0</strong></div>
+  </div>
+</div>
+<div class="checklist">
+  <h3>Checklist</h3>
+  <ul>
+    <li><span class="ok">✓</span> Casque audio branché</li>
+    <li><span class="ok">✓</span> Micro sélectionné dans Windows</li>
+    <li><span class="att">!</span> Autorisez le micro si le navigateur le demande</li>
+    <li><span class="att">!</span> Fermez les autres onglets audio</li>
+  </ul>
+</div>
+<footer>VisioTranslate · Interface interprète sécurisée</footer>
+<script>
+  // URL de votre site Netlify — à mettre à jour après déploiement
+  const NETLIFY_URL = window.location.origin;
+
+  let room = null;
+
+  function setStatut(mode, texte) {
+    document.getElementById('statut').className = 'statut-live ' + mode;
+    document.getElementById('statut-label').textContent = texte;
+    document.getElementById('vu').className = 'vu-bar' + (mode === 'actif' ? ' actif' : '');
+  }
+
+  async function demarrer() {
+    const salle = document.getElementById('salle-select').value;
+    document.getElementById('btn-start').disabled = true;
+    document.getElementById('salle-select').disabled = true;
+    setStatut('', 'Connexion…');
+    try {
+      const resp = await fetch(`${NETLIFY_URL}/token?role=interpreter&room=${salle}`);
+      const data = await resp.json();
+      room = new LivekitClient.Room();
+      await room.connect(data.url, data.token);
+      await room.localParticipant.setMicrophoneEnabled(true);
+      room.on('participantConnected',    () => majAuditeurs());
+      room.on('participantDisconnected', () => majAuditeurs());
+      majAuditeurs();
+      setStatut('actif', '🔴 Diffusion en cours');
+      document.getElementById('waiting-card').style.display = 'none';
+      document.getElementById('live-card').style.display    = 'block';
+      document.getElementById('btn-mute').disabled = false;
+      document.getElementById('btn-stop').disabled = false;
+    } catch(e) {
+      setStatut('arrete', '⚠️ Erreur de connexion');
+      document.getElementById('btn-start').disabled    = false;
+      document.getElementById('salle-select').disabled = false;
+    }
+  }
+
+  function majAuditeurs() {
+    if (!room) return;
+    document.getElementById('nb-auditeurs').textContent = room.remoteParticipants.size;
+  }
+
+  function couperMicro() {
+    if (!room) return;
+    room.localParticipant.setMicrophoneEnabled(false);
+    setStatut('mute', '⏸ Micro coupé');
+    document.getElementById('btn-mute').style.display   = 'none';
+    document.getElementById('btn-unmute').style.display = 'flex';
+  }
+
+  function rouvrirMicro() {
+    if (!room) return;
+    room.localParticipant.setMicrophoneEnabled(true);
+    setStatut('actif', '🔴 Diffusion en cours');
+    document.getElementById('btn-unmute').style.display = 'none';
+    document.getElementById('btn-mute').style.display   = 'flex';
+  }
+
+  async function arreter() {
+    if (!room) return;
+    await room.disconnect();
+    room = null;
+    setStatut('arrete', '⏹ Diffusion arrêtée');
+    document.getElementById('waiting-card').style.display = 'block';
+    document.getElementById('live-card').style.display    = 'none';
+    document.getElementById('btn-mute').disabled          = true;
+    document.getElementById('btn-stop').disabled          = true;
+    document.getElementById('btn-unmute').style.display   = 'none';
+    document.getElementById('btn-mute').style.display     = 'flex';
+    document.getElementById('btn-start').disabled         = false;
+    document.getElementById('salle-select').disabled      = false;
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VisioTranslate – Canal Français</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
+  <style>
+    :root{--bleu:#002395;--rouge:#ED2939;--blanc:#fff;--gris:#f4f4f6;--ombre:rgba(0,35,149,.13)}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'DM Sans',sans-serif;background:var(--gris);color:#111827;min-height:100vh;display:flex;flex-direction:column}
+    header{background:#fff;border-bottom:4px solid var(--rouge);padding:18px 40px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 16px var(--ombre);position:sticky;top:0;z-index:100}
+    .logo{font-family:'Playfair Display',serif;font-size:1.7rem;font-weight:900}
+    .logo span:first-child{color:var(--bleu)}.logo span:last-child{color:var(--rouge)}
+    .badge{background:var(--bleu);color:#fff;font-size:.78rem;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;padding:6px 16px;border-radius:20px}
+    .hero{background:linear-gradient(135deg,var(--bleu) 0%,#001a6e 100%);color:#fff;padding:48px 40px 40px;position:relative;overflow:hidden}
+    .hero::before{content:'';position:absolute;top:-60px;right:-80px;width:280px;height:280px;background:var(--rouge);border-radius:50%;opacity:.1}
+    .hero-inner{max-width:600px;position:relative;z-index:1}
+    .drapeau{display:flex;width:54px;height:36px;border-radius:4px;overflow:hidden;margin-bottom:18px;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+    .drapeau div{flex:1}
+    .b{background:#002395}.w{background:#fff}.r{background:#ED2939}
+    .hero h1{font-family:'Playfair Display',serif;font-size:clamp(1.5rem,4vw,2.2rem);font-weight:900;line-height:1.2;margin-bottom:10px}
+    .hero p{font-size:.95rem;opacity:.82;font-weight:300;line-height:1.6}
+    .carte{background:#fff;border-radius:16px;margin:32px 40px;padding:40px;box-shadow:0 4px 24px var(--ombre);display:flex;flex-direction:column;align-items:center;gap:28px;text-align:center}
+    .visualiseur{display:flex;align-items:center;gap:4px;height:48px}
+    .visualiseur span{display:block;width:4px;border-radius:3px;background:#d1d5db;height:8px}
+    .visualiseur.actif span{background:var(--bleu);animation:onde 1s ease-in-out infinite}
+    .visualiseur span:nth-child(1){animation-delay:0s}.visualiseur span:nth-child(2){animation-delay:.1s}
+    .visualiseur span:nth-child(3){animation-delay:.2s}.visualiseur span:nth-child(4){animation-delay:.3s}
+    .visualiseur span:nth-child(5){animation-delay:.4s}.visualiseur span:nth-child(6){animation-delay:.3s}
+    .visualiseur span:nth-child(7){animation-delay:.2s}.visualiseur span:nth-child(8){animation-delay:.1s}
+    .visualiseur span:nth-child(9){animation-delay:0s}
+    @keyframes onde{0%,100%{height:6px}50%{height:40px}}
+    .statut-txt{font-size:.9rem;color:#6b7280;min-height:24px}
+    .statut-txt.actif{color:var(--bleu);font-weight:500}
+    .btn-play{width:80px;height:80px;border-radius:50%;background:var(--bleu);color:#fff;border:none;cursor:pointer;font-size:1.8rem;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,35,149,.4);transition:transform .15s}
+    .btn-play:hover{transform:scale(1.07)}
+    .btn-play.actif{background:var(--rouge);box-shadow:0 4px 20px rgba(237,41,57,.4)}
+    .label-btn{font-size:.82rem;color:#9ca3af;margin-top:-14px}
+    .volume-wrap{display:flex;align-items:center;gap:12px;width:100%;max-width:300px}
+    .volume-wrap label{font-size:.82rem;color:#6b7280}
+    input[type=range]{flex:1;accent-color:var(--bleu);cursor:pointer}
+    .info-box{background:var(--gris);border-radius:8px;padding:14px 18px;width:100%;max-width:400px;font-size:.82rem;color:#6b7280;line-height:1.6;text-align:left}
+    .info-box strong{color:#374151}
+    footer{margin-top:auto;text-align:center;padding:16px;font-size:.75rem;color:#9ca3af;border-top:1px solid #e5e7eb;background:#fff}
+    footer strong{color:var(--bleu)}
+    @media(max-width:600px){header{padding:14px 20px}.hero{padding:32px 20px 28px}.carte{margin:20px 16px;padding:28px 20px}}
+  </style>
+</head>
+<body>
+<header>
+  <div class="logo"><span>VISIO</span><span>TRANSLATE</span></div>
+  <div class="badge">🎙 Canal Français</div>
+</header>
+<div class="hero">
+  <div class="hero-inner">
+    <div class="drapeau"><div class="b"></div><div class="w"></div><div class="r"></div></div>
+    <h1>Traduction simultanée<br/>en français</h1>
+    <p>Appuyez sur Play pour écouter la traduction en direct.<br/>Aucun micro, aucune inscription requise.</p>
+  </div>
+</div>
+<div class="carte">
+  <div class="visualiseur" id="viz">
+    <span></span><span></span><span></span><span></span><span></span>
+    <span></span><span></span><span></span><span></span>
+  </div>
+  <div class="statut-txt" id="stat">Prêt à écouter</div>
+  <button class="btn-play" id="btn" onclick="toggle()">▶</button>
+  <div class="label-btn" id="lbl">Écouter</div>
+  <div class="volume-wrap">
+    <label>🔈</label>
+    <input type="range" id="volume" min="0" max="1" step="0.05" value="1" oninput="setVolume(this.value)"/>
+    <label>🔊</label>
+  </div>
+  <div class="info-box">
+    <strong>Écoute seule</strong> — Votre micro n'est pas utilisé.<br/>
+    Si la traduction n'a pas encore commencé, réessayez dans quelques instants.
+  </div>
+</div>
+<footer>Service de traduction simultanée par <strong>VisioTranslate</strong> &nbsp;·&nbsp; Écoute seule · Aucun micro</footer>
+<script>
+  const NETLIFY_URL = window.location.origin;
+  const SALLE = "francais";
+
+  let room = null;
+  let actif = false;
+  let audioElements = [];
+
+  async function toggle() {
+    if (!actif) await rejoindre(); else await quitter();
+  }
+
+  async function rejoindre() {
+    const btn  = document.getElementById('btn');
+    const stat = document.getElementById('stat');
+    btn.textContent  = '⏳';
+    btn.disabled     = true;
+    stat.textContent = 'Connexion…';
+    try {
+      const resp = await fetch(`${NETLIFY_URL}/token?role=listener&room=${SALLE}`);
+      const data = await resp.json();
+      room = new LivekitClient.Room();
+      room.on('trackSubscribed', (track) => {
+        if (track.kind === 'audio') {
+          const el = track.attach();
+          el.volume = document.getElementById('volume').value;
+          document.body.appendChild(el);
+          audioElements.push(el);
+        }
+      });
+      room.on('trackUnsubscribed', (track) => {
+        track.detach().forEach(el => el.remove());
+      });
+      await room.connect(data.url, data.token, { autoSubscribe: true });
+      await room.localParticipant.setMicrophoneEnabled(false);
+      await room.localParticipant.setCameraEnabled(false);
+      actif = true;
+      btn.textContent = '⏹'; btn.disabled = false; btn.classList.add('actif');
+      document.getElementById('viz').classList.add('actif');
+      stat.textContent = '🔴 Traduction en cours — écoute seule';
+      stat.classList.add('actif');
+      document.getElementById('lbl').textContent = 'Arrêter';
+    } catch(e) {
+      document.getElementById('btn').textContent  = '▶';
+      document.getElementById('btn').disabled     = false;
+      document.getElementById('stat').textContent = "⚠️ La diffusion n'est pas encore démarrée";
+    }
+  }
+
+  async function quitter() {
+    if (room) {
+      audioElements.forEach(el => el.remove());
+      audioElements = [];
+      await room.disconnect();
+      room = null;
+    }
+    actif = false;
+    const btn = document.getElementById('btn');
+    btn.textContent = '▶'; btn.classList.remove('actif');
+    document.getElementById('viz').classList.remove('actif');
+    document.getElementById('stat').textContent = 'Prêt à écouter';
+    document.getElementById('stat').classList.remove('actif');
+    document.getElementById('lbl').textContent = 'Écouter';
+  }
+
+  function setVolume(val) {
+    audioElements.forEach(el => el.volume = val);
+  }
+</script>
+</body>
+</html>
